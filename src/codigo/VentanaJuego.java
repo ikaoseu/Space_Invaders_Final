@@ -5,6 +5,7 @@
  */
 package codigo;
 
+import java.applet.AudioClip;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -31,8 +32,10 @@ public class VentanaJuego extends javax.swing.JFrame {
     //numero de marcianos que van a aparecer
     int filas = 8;
     int columnas = 10;
-
+    int disparoLaser = 1;
     BufferedImage buffer = null;
+    
+    Image fondo;
 
     Nave miNave = new Nave();
     Disparo miDisparo = new Disparo();
@@ -57,6 +60,18 @@ public class VentanaJuego extends javax.swing.JFrame {
      */
     public VentanaJuego() {
         initComponents();
+        
+        
+        try {
+            fondo = ImageIO.read(getClass().getResource("/imagenes/fondoInv.jpg"));
+        } catch (IOException ex) {
+            
+        }
+        
+               AudioClip sonido;
+               sonido = java.applet.Applet.newAudioClip(getClass().getResource("/sonidos/ambience.wav"));
+               sonido.play();
+        
         //para cargar el archivo de imagenes: 
         // 1º, el nombre del archivo
         // 2º filas que tiene el spritesheet
@@ -100,8 +115,8 @@ public class VentanaJuego extends javax.swing.JFrame {
           listaMarcianos[numeroFila][j] = new Marciano();
           listaMarcianos[numeroFila][j].imagen1 = imagenes[spriteFila][spriteColumna];
           listaMarcianos[numeroFila][j].imagen2 = imagenes[spriteFila][spriteColumna + 1];
-          listaMarcianos[numeroFila][j].x = j * (15 + listaMarcianos[numeroFila][j].imagen1.getWidth(null));
-          listaMarcianos[numeroFila][j].y = numeroFila * (10 + listaMarcianos[numeroFila][j].imagen1.getHeight(null));
+          listaMarcianos[numeroFila][j].setX(j * (15 + listaMarcianos[numeroFila][j].imagen1.getWidth(null)));
+          listaMarcianos[numeroFila][j].setY(numeroFila * (10 + listaMarcianos[numeroFila][j].imagen1.getHeight(null)));
       }
   }  
     
@@ -148,6 +163,9 @@ public class VentanaJuego extends javax.swing.JFrame {
         g2.setColor(Color.BLACK);
         g2.fillRect(0, 0, ANCHOPANTALLA, ALTOPANTALLA);
 
+        
+        g2.drawImage(fondo, 0, 0, null);
+        
         ///////////////////////////////////////////////////////
         //redibujaremos aquí cada elemento
         g2.drawImage(miDisparo.imagen, miDisparo.x, miDisparo.y, null);
@@ -177,12 +195,14 @@ public class VentanaJuego extends javax.swing.JFrame {
         for (int i = 0; i < filas; i++) {
             for (int j = 0; j < columnas; j++) {
                 if (listaMarcianos[i][j].vivo) {
-                    rectanguloMarciano.setFrame(listaMarcianos[i][j].x,
-                                                listaMarcianos[i][j].y,
+                    rectanguloMarciano.setFrame(listaMarcianos[i][j].getX(), listaMarcianos[i][j].getY(),
                                                 listaMarcianos[i][j].imagen1.getWidth(null),
                                                 listaMarcianos[i][j].imagen1.getHeight(null)
                                                 );
                     if (rectanguloDisparo.intersects(rectanguloMarciano)){
+                        AudioClip sonido;
+                         sonido = java.applet.Applet.newAudioClip(getClass().getResource("/sonidos/bicho1.wav"));
+                         sonido.play();
                         listaMarcianos[i][j].vivo = false;
                         miDisparo.posicionaDisparo(miNave);
                         miDisparo.y = 1000;
@@ -196,7 +216,9 @@ public class VentanaJuego extends javax.swing.JFrame {
     private void cambiaDireccionMarcianos() {
         for (int i = 0; i < filas; i++) {
             for (int j = 0; j < columnas; j++) {
+                listaMarcianos[i][j].setY(listaMarcianos[i][j].getY() + listaMarcianos[0][0].imagen1.getHeight(null));
                 listaMarcianos[i][j].setvX(listaMarcianos[i][j].getvX()* -1);
+                
             }
         }
     }
@@ -210,18 +232,14 @@ public class VentanaJuego extends javax.swing.JFrame {
                     listaMarcianos[i][j].mueve();
                     //chequeo si el marciano ha chocado contra la pared para cambiar la dirección 
                     //de todos los marcianos
-                    if (listaMarcianos[i][j].x + anchoMarciano == ANCHOPANTALLA || listaMarcianos[i][j].x == 0) {
+                    if (listaMarcianos[i][j].getX() + anchoMarciano == ANCHOPANTALLA || listaMarcianos[i][j].getX() == 0) {
                         direccionMarcianos = true;
                     }
                     if (contador < 50) {
-                        _g2.drawImage(listaMarcianos[i][j].imagen1,
-                                listaMarcianos[i][j].x,
-                                listaMarcianos[i][j].y,
+                        _g2.drawImage(listaMarcianos[i][j].imagen1, listaMarcianos[i][j].getX(), listaMarcianos[i][j].getY(),
                                 null);
                     } else if (contador < 100) {
-                        _g2.drawImage(listaMarcianos[i][j].imagen2,
-                                listaMarcianos[i][j].x,
-                                listaMarcianos[i][j].y,
+                        _g2.drawImage(listaMarcianos[i][j].imagen2, listaMarcianos[i][j].getX(), listaMarcianos[i][j].getY(),
                                 null);
                     } else {
                         contador = 0;
@@ -291,6 +309,31 @@ public class VentanaJuego extends javax.swing.JFrame {
                 miNave.setPulsadoDerecha(true);
                 break;
             case KeyEvent.VK_SPACE:
+                if(disparoLaser == 1){
+                   AudioClip sonido;
+                   sonido = java.applet.Applet.newAudioClip(getClass().getResource("/sonidos/lasrhit1.wav"));
+                   sonido.play();
+                   disparoLaser = 2;
+               }else{
+                   if(disparoLaser == 2){
+                       AudioClip sonido;
+                       sonido = java.applet.Applet.newAudioClip(getClass().getResource("/sonidos/lasrhit2.wav"));
+                       sonido.play();
+                       disparoLaser = 3;
+                   }else{
+                       if(disparoLaser == 3){
+                           AudioClip sonido;
+                           sonido = java.applet.Applet.newAudioClip(getClass().getResource("/sonidos/lasrhit3.wav"));
+                           sonido.play();
+                           disparoLaser = 4;
+                       }else{
+                             AudioClip sonido;
+                             sonido = java.applet.Applet.newAudioClip(getClass().getResource("/sonidos/lasrhit4.wav"));
+                             sonido.play();
+                             disparoLaser = 1;
+                       }
+                   }
+               }
                 miDisparo.posicionaDisparo(miNave);
                 miDisparo.disparado = true;
                 break;
